@@ -166,7 +166,7 @@ def footer(pg, scripts=""):
     </ul></div>
   </div>
   <div class="wrap legal">
-    <span>© Haverly Consulting Ltd {date.today().year}. Registered in England and Wales.</span>
+    <span>© Haverly Consulting Ltd {date.today().year}. Registered in England and Wales, company number {SITE['company_number']}. Registered office: {', '.join(SITE['address'][:2])} {SITE['address'][2]}.</span>
     <span>Housing finance advisory for local government</span>
   </div>
 </footer>

@@ -15,6 +15,7 @@ SITE = {
     "linkedin": "",  # add the company LinkedIn URL here to show it in the footer
     # Formspree form ID for the contact form (looks like "xyzabcde"). Leave as is until you have one.
     "formspree_id": "YOUR_FORM_ID",
+    "company_number": "12109253",
 }
 
 SERVICES = [
