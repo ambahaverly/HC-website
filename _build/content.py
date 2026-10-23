@@ -66,12 +66,12 @@ TESTIMONIALS = [
 ]
 
 TEAM = [
-    {"id": "nick", "name": "Nick Haverly", "role": "Director", "initials": "NH",
+    {"id": "nick", "name": "Nick Haverly FCPFA", "role": "Director", "initials": "NH",
      "bio": [
         "Nick is an experienced and entrepreneurial CCAB qualified finance professional, with a proven track record of shaping public sector practice on a local and national level, influencing and improving the delivery of services, and leading large and complex organisations through periods of change and economic uncertainty, focusing on growth and innovation.",
         "He has significant experience advising chief executives, executive directors, elected members, governing bodies and central and local government on strategic financial matters, driving efficiencies and maximising best value and best returns.",
         "Nick has been the financial lead on a number of award-winning, multi-million pound property investments, energy efficiency schemes and housing and regeneration developments across the UK, including two major temporary accommodation funding structures for Westminster City Council.",
-        "He is a member of the Cabinet Office's One Public Estate Pool of Experts and has been both adviser and lead on a number of business transformation projects."]},
+        "He was a member of the Cabinet Office's One Public Estate Pool of Experts, and has been both adviser and lead on a number of business transformation projects."]},
     {"id": "richard", "name": "Richard Burden FCCA", "role": "Housing Finance and Development Consultant", "initials": "RB",
      "bio": [
         "Richard is a qualified finance professional with significant experience across the local authority, social housing and charity sectors. He has a proven ability to challenge and improve existing processes and systems, and communicates clearly with clients and colleagues on detailed financial issues.",
