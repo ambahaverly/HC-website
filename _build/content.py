@@ -53,7 +53,8 @@ PRACTICE = [
 ]
 
 CLIENTS = ["Cabinet Office", "City of Westminster", "Ealing Council", "Guildford Borough Council",
-           "Waverley Borough Council", "Isle of Wight Council", "Gosport Borough Council", "Reading Borough Council"]
+           "Waverley Borough Council", "Isle of Wight Council", "Gosport Borough Council", "Reading Borough Council",
+           "Portsmouth City Council", "South Kesteven District Council"]
 
 # Procurement routes shown on the homepage and contact page
 FRAMEWORKS = [
@@ -419,6 +420,7 @@ CASE_STUDIES = [
                ("Challenge", "Difficult local development viability")],
      "summary": "Gosport faces particular challenges around development viability. In a One Public Estate commission from Portsmouth City Council, we helped Gosport Borough Council find new ways to turn its old housing depot into new homes.",
      "body": [
+        "At the time, Portsmouth City Council's management team also ran Gosport Borough Council, so the commission came through Portsmouth.",
         "Conventional approaches would not make the scheme stack up, so the Council needed to consider innovative ways to achieve development.",
         "Working through the One Public Estate programme, we identified options that made the redevelopment of the old housing depot into new homes a viable reality.",
      ],
