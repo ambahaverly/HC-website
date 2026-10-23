@@ -377,9 +377,9 @@ CASE_STUDIES = [
      "headline": "Finance lead on a £467m regeneration programme",
      "figure": "£467m", "figure_label": "regeneration programme delivering around 1,500 new homes",
      "facts": [("Scheme", "1,500 new homes, community facilities and a new council depot on a Thames Water site"),
-               ("Our role", "Finance lead, replacing PricewaterhouseCoopers"),
+               ("Our role", "Finance lead, replacing a Big Four firm"),
                ("Funding", "Housing Infrastructure Fund, Enterprise M3 LEP and discounted PWLB borrowing")],
-     "summary": "Guildford Borough Council brought us in to replace PricewaterhouseCoopers as finance lead for its Weyside Urban Village regeneration programme.",
+     "summary": "Guildford Borough Council brought us in to replace a Big Four firm as finance lead for its Weyside Urban Village regeneration programme.",
      "body": [
         "The programme sought to deliver around 1,500 new homes, new community facilities and a new council depot on a Thames Water site, with a total cost of £467m.",
         "We produced the development appraisal, assessed the project's viability, and identified the funding and disposal solutions needed to make it deliverable.",
