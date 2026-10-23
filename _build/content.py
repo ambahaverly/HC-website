@@ -53,12 +53,13 @@ CLIENTS = ["Cabinet Office", "City of Westminster", "Ealing Council", "Guildford
 
 # Procurement routes shown on the homepage and contact page
 FRAMEWORKS = [
-    {"name": "YPO 1141", "via": "Consultancy+",
-     "detail": "Certified to supply through Consultancy+ on YPO framework 1141, Managing Consultancy and Professional Services."},
-    {"name": "NEPRO³", "via": "Bloom",
-     "detail": "Accredited supplier through Bloom, the neutral vendor service for the NEPRO³ public sector procurement solution."},
-    {"name": "NHS LPP", "via": "London Procurement Partnership",
-     "detail": "Supplier through NHS London Procurement Partnership."},
+    {"name": "YPO 1141", "via": "Consultancy+", "url": "https://servicesprocurement.consultancyplus.com/about",
+     "detail": "Certified to supply through Consultancy+, sole provider of YPO framework 1141 for Managing Consultancy and Professional Services. Supports direct award, typically within five to seven days, or a mini-competition."},
+    {"name": "NEPRO³", "via": "Bloom", "url": "https://bloom.services/framework/nepro-3",
+     "detail": "Accredited supplier on NEPRO³, Bloom's compliant route to market for public sector professional services, with fast mini-competitions."},
+    {"name": "NHS LPP DPS", "via": "NHS London Procurement Partnership",
+     "url": "https://www.lpp.nhs.uk/categories-and-services/estates-fm-corporate-services/estates-facilities-consultancy-services-dynamic-purchasing-system/",
+     "detail": "Estates and Facilities Consultancy Services Dynamic Purchasing System (ref LPP/2020/015), open to all public sector bodies until June 2028 through further competition."},
 ]
 
 TESTIMONIALS = [

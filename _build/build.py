@@ -553,7 +553,7 @@ def build_contact():
     </dl>
     <h2 id="frameworks" style="font-size:1.6rem;font-weight:750;margin:48px 0 12px;scroll-margin-top:100px">Buying through a framework</h2>
     <p style="color:var(--muted);margin-bottom:20px">Public sector buyers can commission us through any of these routes, by direct award or mini-competition depending on the framework rules, without running a full tender of their own.</p>
-    <dl class="info-list">{''.join(f"<dt>{e(f['name'])}</dt><dd>{e(f['detail'])}</dd>" for f in FRAMEWORKS)}</dl>
+    <dl class="info-list">{''.join(f"<dt>{e(f['name'])}</dt><dd>{e(f['detail'])} <a href=\"{f['url']}\" rel=\"noopener\" target=\"_blank\">Framework details</a></dd>" for f in FRAMEWORKS)}</dl>
   </div>
 </div>
 </main>
