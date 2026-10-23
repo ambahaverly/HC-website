@@ -153,6 +153,17 @@ section.block{padding-block:88px}
 .clients li{font-family:var(--f-display);font-stretch:85%;font-weight:600;font-size:1.02rem;opacity:.82}
 @media (max-width:760px){.clients .wrap{grid-template-columns:1fr;gap:14px}}
 
+/* ---------- How to buy ---------- */
+.buy .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:40px;align-items:center;padding-block:48px;border-bottom:1px solid var(--rule)}
+.buy h2{font-size:clamp(1.5rem,2.6vw,2rem);font-weight:750;margin:10px 0 10px}
+.buy p{color:var(--muted)}
+.buy ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.buy li{border:1px solid var(--rule);border-top:3px solid var(--civic);background:var(--surface);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.buy li b{font-family:var(--f-display);font-stretch:85%;font-weight:750;font-size:1.3rem}
+.buy li span{font-size:.86rem;color:var(--muted)}
+@media (max-width:860px){.buy .wrap{grid-template-columns:1fr;gap:24px}}
+@media (max-width:520px){.buy ul{grid-template-columns:1fr}}
+
 /* ---------- Testimonials ---------- */
 .quotes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}
 .quotes.two{grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 48px}

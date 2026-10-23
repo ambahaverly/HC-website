@@ -51,6 +51,16 @@ PRACTICE = [
 CLIENTS = ["Cabinet Office", "City of Westminster", "Ealing Council", "Guildford Borough Council",
            "Waverley Borough Council", "Isle of Wight Council", "Gosport Borough Council", "Reading Borough Council"]
 
+# Procurement routes shown on the homepage and contact page
+FRAMEWORKS = [
+    {"name": "YPO 1141", "via": "Consultancy+",
+     "detail": "Certified to supply through Consultancy+ on YPO framework 1141, Managing Consultancy and Professional Services."},
+    {"name": "NEPRO³", "via": "Bloom",
+     "detail": "Accredited supplier through Bloom, the neutral vendor service for the NEPRO³ public sector procurement solution."},
+    {"name": "NHS LPP", "via": "London Procurement Partnership",
+     "detail": "Supplier through NHS London Procurement Partnership."},
+]
+
 TESTIMONIALS = [
     {"org": "Guildford Borough Council", "role": "Assistant Director of Regeneration and Economic Development",
      "quote": "Haverly Consulting has provided ongoing financial support to Guildford Borough Council including financial modelling and analysis, ongoing cashflow management, submission of Housing Infrastructure Fund (HIF) grant claims, and preparation of viability appraisals. This work has been fundamental to the development of the scheme."},

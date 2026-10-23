@@ -14,11 +14,11 @@ from datetime import date
 
 sys.path.insert(0, os.path.dirname(__file__))
 from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POSTS,  # noqa: E402
-                     SERVICE_PAGES)
+                     SERVICE_PAGES, FRAMEWORKS)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "7"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "8"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 
@@ -356,6 +356,8 @@ def build_home():
     </div>
   </div>
 
+  {frameworks_html(pg)}
+
   <section class="block" id="services">
     <div class="wrap">
       <div class="sec-head">
@@ -413,6 +415,20 @@ def build_home():
     write(pg, head(pg, "Housing Finance Consultancy for Local Authorities | Haverly Consulting",
                    "Specialist housing finance consultants supporting UK local authorities with HRA, temporary accommodation, financial appraisals, business partnering and advisory services.",
                    extra=ld(org)) + body + footer(pg))
+
+
+def frameworks_html(pg):
+    items = "".join(f'<li><b>{e(f["name"])}</b><span>via {e(f["via"])}</span></li>' for f in FRAMEWORKS)
+    return f"""<section class="buy" aria-labelledby="buy-h">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">How to buy</p>
+        <h2 id="buy-h">Commission us without a full tender</h2>
+        <p>We are an approved supplier on three public sector procurement routes. <a class="link" href="{pg.href('contact')}#frameworks">How it works</a></p>
+      </div>
+      <ul>{items}</ul>
+    </div>
+  </section>"""
 
 
 def tools_html(pg):
@@ -535,6 +551,9 @@ def build_contact():
       <dt>Office</dt><dd>Haverly Consulting Ltd<br>{'<br>'.join(SITE['address'])}</dd>
       <dt>Hours</dt><dd>Monday to Friday, 9:00 to 18:00<br>Closed weekends</dd>
     </dl>
+    <h2 id="frameworks" style="font-size:1.6rem;font-weight:750;margin:48px 0 12px;scroll-margin-top:100px">Buying through a framework</h2>
+    <p style="color:var(--muted);margin-bottom:20px">Public sector buyers can commission us through any of these routes, by direct award or mini-competition depending on the framework rules, without running a full tender of their own.</p>
+    <dl class="info-list">{''.join(f"<dt>{e(f['name'])}</dt><dd>{e(f['detail'])}</dd>" for f in FRAMEWORKS)}</dl>
   </div>
 </div>
 </main>
