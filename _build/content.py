@@ -59,7 +59,7 @@ FRAMEWORKS = [
      "detail": "Accredited supplier on NEPRO³, Bloom's compliant route to market for public sector professional services, with fast mini-competitions."},
     {"name": "NHS LPP DPS", "via": "NHS London Procurement Partnership",
      "url": "https://www.lpp.nhs.uk/categories-and-services/estates-fm-corporate-services/estates-facilities-consultancy-services-dynamic-purchasing-system/",
-     "detail": "Estates and Facilities Consultancy Services Dynamic Purchasing System (ref LPP/2020/015), open to all public sector bodies until June 2028 through further competition."},
+     "detail": "Estates and Facilities Consultancy Services Dynamic Purchasing System (ref LPP/2020/015), open to all public sector bodies until June 2028 through further competition. Approved for Lot 5 (Construction Project Management Services), Lot 9 (Estates Strategy and Business Case Development Services) and Lot 11 (Property Acquisition, Disposal and Management Advisory Services)."},
 ]
 
 TESTIMONIALS = [
