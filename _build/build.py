@@ -18,7 +18,7 @@ from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POST
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "6"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "7"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 
@@ -91,7 +91,7 @@ def header(pg, current=""):
         f'<a class="sub" href="{pg.href(s["slug"])}">{e(s["name"])}</a>' for s in SERVICES)
     return f"""<header class="site-head">
   <div class="wrap">
-    <a class="brand logo" href="{pg.href('')}" aria-label="Haverly Consulting home"><img src="{pg.base}assets/img/logo.svg" alt="Haverly Consulting" width="31" height="32"></a>
+    <a class="brand logo" href="{pg.href('')}" aria-label="Haverly Consulting home"><img src="{pg.base}assets/img/logo-wordmark.svg" alt="Haverly Consulting" width="78" height="44"></a>
     <nav class="nav" aria-label="Main">
       <div class="drop">
         <button type="button" aria-expanded="false" aria-haspopup="true"{cur('services')}>Services</button>
@@ -149,7 +149,7 @@ def footer(pg, scripts=""):
     return f"""<footer class="site-foot">
   <div class="wrap cols">
     <div>
-      <a class="brand logo" href="{pg.href('')}" aria-label="Haverly Consulting home"><img src="{pg.base}assets/img/logo.svg" alt="Haverly Consulting" width="31" height="32"></a>
+      <a class="brand logo" href="{pg.href('')}" aria-label="Haverly Consulting home"><img src="{pg.base}assets/img/logo-wordmark.svg" alt="Haverly Consulting" width="78" height="44"></a>
       <p>Independent housing finance advisory for UK local authorities and the affordable housing sector.</p>
     </div>
     <div><h2>Services</h2><ul>{svc}</ul></div>
