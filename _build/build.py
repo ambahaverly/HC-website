@@ -159,7 +159,7 @@ def contact_band(pg, heading="Talk to a housing finance specialist",
 
 def footer(pg, scripts=""):
     svc = "".join(f'<li><a href="{pg.href(s["slug"])}">{e(s["name"])}</a></li>' for s in SERVICES)
-    li = f'<li><a href="{SITE["linkedin"]}" rel="noopener">LinkedIn</a></li>' if SITE["linkedin"] else ""
+    li = f'<li><a href="{SITE["linkedin"]}" rel="noopener">Nick on LinkedIn</a></li>' if SITE["linkedin"] else ""
     return f"""<footer class="site-foot">
   <div class="wrap cols">
     <div>
@@ -318,7 +318,7 @@ def build_home():
            "description": "Independent housing finance advisory for UK local authorities and the affordable housing sector.",
            "address": {"@type": "PostalAddress", "streetAddress": SITE["address"][0], "addressLocality": "London",
                        "postalCode": SITE["address"][2], "addressCountry": "GB"},
-           "areaServed": "GB", "founder": {"@type": "Person", "name": "Nick Haverly", "jobTitle": "Director"}}
+           "areaServed": "GB", "founder": {"@type": "Person", "name": "Nick Haverly", "jobTitle": "Director", "sameAs": [SITE["linkedin"]]}}
     practice = "".join(
         f'<li><div><b>{e(t)}</b><span>{e(d)}</span></div></li>' for t, d, _slug in PRACTICE)
     clients = "".join(f"<li>{e(c)}</li>" for c in CLIENTS)
@@ -754,6 +754,7 @@ def about_nick_html(pg):
         <div class="ctas" style="margin-top:24px">
           <a class="btn btn-civic" href="{pg.href('contact')}">Book a call with Nick</a>
           <a class="btn btn-outline" href="{pg.href('our-team')}">Meet the team</a>
+          <a class="btn btn-outline" href="{SITE['linkedin']}" rel="noopener">Follow on LinkedIn</a>
         </div>
       </div>
     </div>
