@@ -18,7 +18,7 @@ from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POST
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "4"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "5"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 
@@ -279,7 +279,7 @@ def build_home():
                        "postalCode": SITE["address"][2], "addressCountry": "GB"},
            "areaServed": "GB", "founder": {"@type": "Person", "name": "Nick Haverly", "jobTitle": "Director"}}
     practice = "".join(
-        f'<li><a href="{pg.href(slug)}"><b>{e(t)}</b><span>{e(d)}</span></a></li>' for t, d, slug in PRACTICE)
+        f'<li><div><b>{e(t)}</b><span>{e(d)}</span></div></li>' for t, d, _slug in PRACTICE)
     clients = "".join(f"<li>{e(c)}</li>" for c in CLIENTS)
     body = f"""{header(pg)}
 <main id="main">
