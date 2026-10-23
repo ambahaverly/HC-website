@@ -38,6 +38,9 @@ p{margin:0}
 .site-head .wrap{display:flex;align-items:center;gap:24px;padding-block:14px;position:relative}
 .brand{display:flex;flex-direction:column;text-decoration:none;line-height:1}
 .brand b{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:1.35rem;letter-spacing:.01em}
+.brand.logo{background:#FFFFFF;padding:8px 9px;border-radius:3px;flex-direction:row}
+.brand.logo img{width:31px;height:32px}
+.site-foot .brand.logo{display:inline-flex}
 .brand span{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--band-muted);margin-top:4px}
 .nav{display:flex;gap:22px;margin-left:auto;align-items:center}
 .nav > a,.nav .drop > button{text-decoration:none;font:inherit;font-size:.9rem;color:var(--band-muted);background:none;border:0;padding:6px 0;cursor:pointer}
