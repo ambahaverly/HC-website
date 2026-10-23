@@ -154,6 +154,34 @@ section.block{padding-block:88px}
 .clients li{font-family:var(--f-display);font-stretch:85%;font-weight:600;font-size:1.02rem;opacity:.82}
 @media (max-width:760px){.clients .wrap{grid-template-columns:1fr;gap:14px}}
 
+/* ---------- Engagements (home) ---------- */
+.engs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.eng{display:flex;flex-direction:column;gap:12px;padding:26px;background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--civic);text-decoration:none}
+.eng:hover{border-color:var(--civic)}
+.eng .eyebrow{color:var(--brass)}
+.eng h3{font-size:1.35rem;font-weight:750;line-height:1.15}
+.eng p:not(.eyebrow){color:var(--muted);font-size:.95rem}
+.eng .link{margin-top:auto;align-self:flex-start;font-size:.92rem}
+@media (max-width:900px){.engs{grid-template-columns:1fr}}
+
+/* ---------- About Nick (home) ---------- */
+.about-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:56px;align-items:center}
+.portrait.big{width:260px;font-size:4rem}
+.about h2{font-size:clamp(1.9rem,3.6vw,2.6rem);font-weight:800;margin-top:12px}
+.about .role{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--brass);margin-top:8px}
+.about-lede{font-size:1.08rem;margin-top:18px;max-width:62ch}
+.creds{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;max-width:760px}
+.creds li{padding-left:16px;border-left:2px solid var(--brass);font-size:.95rem;color:var(--muted);line-height:1.4}
+@media (max-width:860px){.about-grid{grid-template-columns:1fr;gap:28px}.portrait.big{width:200px}.creds{grid-template-columns:1fr}}
+
+/* ---------- Case studies page ---------- */
+.cases{display:flex;flex-direction:column;gap:72px}
+.case{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:48px;align-items:start;scroll-margin-top:100px}
+.case .tomb{position:sticky;top:100px}
+.tomb-figure.txt{font-size:clamp(1.8rem,3vw,2.3rem);line-height:1.05;font-stretch:80%}
+.case-body .quote{margin-top:1.6em}
+@media (max-width:900px){.case{grid-template-columns:1fr;gap:28px}.case .tomb{position:static}}
+
 /* ---------- How to buy ---------- */
 .buy .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:40px;align-items:center;padding-block:48px;border-bottom:1px solid var(--rule)}
 .buy h2{font-size:clamp(1.5rem,2.6vw,2rem);font-weight:750;margin:10px 0 10px}

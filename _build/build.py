@@ -14,11 +14,11 @@ from datetime import date
 
 sys.path.insert(0, os.path.dirname(__file__))
 from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POSTS,  # noqa: E402
-                     SERVICE_PAGES, FRAMEWORKS)
+                     SERVICE_PAGES, FRAMEWORKS, CASE_STUDIES, ABOUT_NICK)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "11"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "12"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 
@@ -53,9 +53,24 @@ class Page:
         return SITE["url"] + "/" + p[:-5]
 
 
-def head(pg, title, desc, extra="", og_type="website", noindex=False):
+OG_CARDS = []  # share images to render: (filename, eyebrow, title, byline)
+
+
+def og_image(pg, title, eyebrow, byline):
+    name = "home" if pg.path == "index.html" else pg.path[:-5].replace("/", "-")
+    OG_CARDS.append((name, eyebrow, title, byline))
+    return f"{SITE['url']}/assets/og/{name}.jpg"
+
+
+def head(pg, title, desc, extra="", og_type="website", noindex=False,
+         og_title=None, og_eyebrow="Housing finance advisory", og_byline=""):
     full_title = title if title.endswith(SITE["name"]) else f"{title} | {SITE['name']}"
     robots = '<meta name="robots" content="noindex">\n' if noindex else ""
+    card_title = og_title or re.sub(r"\s*\|\s*" + re.escape(SITE["name"]) + r"$", "", full_title)
+    img = "" if noindex else og_image(pg, card_title, og_eyebrow, og_byline)
+    og_img = (f'<meta property="og:image" content="{img}">\n<meta property="og:image:width" content="1200">\n'
+              f'<meta property="og:image:height" content="630">\n<meta property="og:image:alt" content="{e(card_title)}">\n'
+              f'<meta name="twitter:image" content="{img}">\n') if img else ""
     return f"""<!doctype html>
 <html lang="en-GB">
 <head>
@@ -69,7 +84,7 @@ def head(pg, title, desc, extra="", og_type="website", noindex=False):
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{pg.url}">
 <meta property="og:site_name" content="{SITE['name']}">
-<meta name="twitter:card" content="summary">
+{og_img}<meta name="twitter:card" content="{'summary_large_image' if img else 'summary'}">
 <meta name="theme-color" content="#0B2C34">
 <link rel="icon" href="{pg.base}assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -97,7 +112,7 @@ def header(pg, current=""):
         <button type="button" aria-expanded="false" aria-haspopup="true"{cur('services')}>Services</button>
         <div class="drop-panel">{svc_links}</div>
       </div>
-      <a href="{pg.href('')}#results">Transactions</a>
+      <a href="{pg.href('case-studies')}"{cur('cases')}>Case studies</a>
       <a href="{pg.href('blog')}"{cur('blog')}>Insights</a>
       <a href="{pg.href('our-team')}"{cur('team')}>Team</a>
       <a href="{pg.href('useful-tools')}"{cur('tools')}>Tools</a>
@@ -109,7 +124,7 @@ def header(pg, current=""):
         <p>Services</p>
         {mobile_svcs}
         <p>Company</p>
-        <a href="{pg.href('')}#results">Transactions</a>
+        <a href="{pg.href('case-studies')}">Case studies</a>
         <a href="{pg.href('blog')}">Insights</a>
         <a href="{pg.href('our-team')}">Team</a>
         <a href="{pg.href('testimonials')}">Testimonials</a>
@@ -154,6 +169,7 @@ def footer(pg, scripts=""):
     </div>
     <div><h2>Services</h2><ul>{svc}</ul></div>
     <div><h2>Company</h2><ul>
+      <li><a href="{pg.href('case-studies')}">Case studies</a></li>
       <li><a href="{pg.href('our-team')}">Our team</a></li>
       <li><a href="{pg.href('testimonials')}">Testimonials</a></li>
       <li><a href="{pg.href('blog')}">Insights</a></li>
@@ -358,12 +374,16 @@ def build_home():
     </div>
   </section>
 
+  {engagements_html(pg)}
+
   <div class="clients" aria-label="Selected clients">
     <div class="wrap">
       <p class="eyebrow">Selected clients</p>
       <ul>{clients}</ul>
     </div>
   </div>
+
+  {about_nick_html(pg)}
 
   {frameworks_html(pg)}
 
@@ -423,7 +443,9 @@ def build_home():
 """
     write(pg, head(pg, "Housing Finance Consultancy for Local Authorities | Haverly Consulting",
                    "Specialist housing finance consultants supporting UK local authorities with HRA, temporary accommodation, financial appraisals, business partnering and advisory services.",
-                   extra=ld(org)) + body + footer(pg))
+                   extra=ld(org), og_title="Complex housing challenges. Clear financial solutions.",
+                   og_eyebrow="Housing finance advisory for local government",
+                   og_byline="Independent strategic and financial advice for local authorities") + body + footer(pg))
 
 
 def frameworks_html(pg):
@@ -484,7 +506,8 @@ def build_services():
 {contact_band(pg)}
 </main>
 """
-        write(pg, head(pg, d["title"], d["desc"], extra=ld(faq_schema(d["faq"]))) + body + footer(pg))
+        write(pg, head(pg, d["title"], d["desc"], extra=ld(faq_schema(d["faq"])),
+                       og_title=d["h1"], og_eyebrow="Services", og_byline=d["lede"]) + body + footer(pg))
 
 
 def build_testimonials():
@@ -625,7 +648,8 @@ def build_posts():
 </div>
 </main>
 """
-        write(pg, head(pg, p["title"], p["desc"], extra=ld(schema), og_type="article") + body + footer(pg))
+        write(pg, head(pg, p["title"], p["desc"], extra=ld(schema), og_type="article",
+                       og_eyebrow=p["tag"], og_byline=f"Nick Haverly FCPFA  ·  {fmt_date(p['date'])}") + body + footer(pg))
 
 
 def build_blog():
@@ -661,7 +685,7 @@ def build_tools():
 </main>
 """
     write(pg, head(pg, "Useful Tools for Local Authority Finance Teams",
-                   "Free PWLB calculators for local authorities: early repayment premium and discount, and an NPV comparison of PWLB and index-linked borrowing.") + body + footer(pg))
+                   "Free PWLB calculators for local authorities: early repayment premium and discount, and an NPV comparison of PWLB and index-linked borrowing.", og_eyebrow="Free tool") + body + footer(pg))
 
 
 HRA_STARTERS = [
@@ -670,6 +694,92 @@ HRA_STARTERS = [
     "Can we charge our homelessness team to the HRA?",
     "How should garages be accounted for in the HRA?",
 ]
+
+
+def engagements_html(pg):
+    cards = "".join(f"""<a class="eng" href="{pg.href('case-studies')}#{c['id']}">
+          <p class="eyebrow">{e(c['client'])}</p>
+          <h3>{e(c['headline'])}</h3>
+          <p>{e(c['summary'])}</p>
+          <span class="link">Read the case study</span>
+        </a>""" for c in CASE_STUDIES if c.get("home"))
+    return f"""<section class="block alt" id="engagements">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Selected engagements</p>
+          <h2>Regeneration, appraisal and viability work for councils</h2>
+        </div>
+        <p class="intro"><a class="link" href="{pg.href('case-studies')}">All case studies</a></p>
+      </div>
+      <div class="engs">{cards}</div>
+    </div>
+  </section>"""
+
+
+def about_nick_html(pg):
+    nick = next(t for t in TEAM if t["id"] == "nick")
+    pts = "".join(f"<li>{e(x)}</li>" for x in ABOUT_NICK["points"])
+    return f"""<section class="block about" id="about">
+    <div class="wrap about-grid">
+      <div class="about-photo"><div class="portrait big" aria-hidden="true">{nick['initials']}<img src="{pg.base}assets/img/team/nick.jpg" alt="" loading="lazy" onerror="this.remove()"></div></div>
+      <div>
+        <p class="eyebrow">Who you work with</p>
+        <h2>{e(nick['name'])}</h2>
+        <p class="role">{e(nick['role'])}</p>
+        <p class="about-lede">{e(ABOUT_NICK['lede'])}</p>
+        <ul class="creds">{pts}</ul>
+        <div class="ctas" style="margin-top:24px">
+          <a class="btn btn-civic" href="{pg.href('contact')}">Book a call with Nick</a>
+          <a class="btn btn-outline" href="{pg.href('our-team')}">Meet the team</a>
+        </div>
+      </div>
+    </div>
+  </section>"""
+
+
+def build_case_studies():
+    pg = Page("case-studies.html")
+    items = ""
+    for c in CASE_STUDIES:
+        facts = "".join(f"<dt>{e(k)}</dt><dd>{e(v)}</dd>" for k, v in c["facts"])
+        fig = (f'<p class="tomb-figure">{e(c["figure"])}<small>{e(c["figure_label"])}</small></p>'
+               if c.get("figure") else f'<p class="tomb-figure txt">{e(c["headline"])}</p>')
+        body = "".join(f"<p>{e(x)}</p>" for x in c["body"])
+        did = "".join(f"<li>{e(x)}</li>" for x in c["did"])
+        quote = ""
+        if c.get("testimonial") is not None:
+            t = TESTIMONIALS[c["testimonial"]]
+            quote = f'<figure class="quote"><blockquote>{e(t["quote"])}</blockquote><figcaption><b>{e(t["role"])}</b>{e(t["org"])}</figcaption></figure>'
+        more = f'<p><a class="link" href="{pg.href(c["article"])}">Read the full article</a></p>' if c.get("article") else ""
+        items += f"""<article class="case" id="{c['id']}">
+      <div class="tomb">
+        <p class="eyebrow">{e(c['client'])}</p>
+        <p class="tomb-client">{e(c['title'])}</p>
+        {fig}
+        <dl>{facts}</dl>
+      </div>
+      <div class="case-body prose">
+        <p class="intro-line">{e(c['summary'])}</p>
+        {body}
+        <h3>What we did</h3>
+        <ul>{did}</ul>
+        {quote}
+        {more}
+      </div>
+    </article>"""
+    body = f"""{header(pg, 'cases')}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Case studies", "Funding structures, regeneration programmes and viability work for local authorities.", eyebrow="Our work")}
+<section class="block">
+  <div class="wrap cases">{items}</div>
+</section>
+{contact_band(pg, "Facing a similar challenge?", "Whether it is a regeneration programme, a temporary accommodation pressure or a site that won't stack up, a 30-minute conversation is usually enough to tell you where the opportunity is.")}
+</main>
+"""
+    write(pg, head(pg, "Case Studies", "Case studies from Haverly Consulting: Westminster temporary accommodation funding, Guildford's £467m Weyside Urban Village, Waverley development appraisals and a Gosport One Public Estate commission.",
+                   og_eyebrow="Case studies", og_title="Funding, regeneration and viability for councils",
+                   og_byline="Westminster · Guildford · Waverley · Gosport") + body + footer(pg))
 
 
 def build_hra_assistant():
@@ -717,7 +827,7 @@ def build_hra_assistant():
 """
     write(pg, head(pg, "HRA Assistant | Housing Revenue Account Questions Answered",
                    "Free AI assistant answering questions about the Housing Revenue Account in England, drawing on Haverly Consulting's HRA knowledge base with sources cited.",
-                   noindex=not SITE.get("hra_endpoint"))
+                   noindex=not SITE.get("hra_endpoint"), og_eyebrow="Free tool")
           + body + footer(pg, f'<script src="{pg.asset("js/hra-chat.js")}" defer></script>\n'))
 
 
@@ -779,7 +889,7 @@ def build_pwlb_repayment():
 </main>
 """
     write(pg, head(pg, "PWLB Early Repayment Premium and Discount Calculator",
-                   "Free calculator for the premium or discount on early repayment of PWLB loans, covering EIP, annuity and maturity loans, with full workings.")
+                   "Free calculator for the premium or discount on early repayment of PWLB loans, covering EIP, annuity and maturity loans, with full workings.", og_eyebrow="Free tool")
           + body + footer(pg, f'<script src="{pg.asset("js/pwlb-repayment.js")}" defer></script>\n'))
 
 
@@ -843,7 +953,7 @@ def build_pwlb_vs_il():
     scripts = (f'<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js" defer></script>\n'
                f'<script src="{pg.asset("js/pwlb-vs-il.js")}" defer></script>\n')
     write(pg, head(pg, "PWLB vs Index-Linked Borrowing Cost Comparison",
-                   "Free tool comparing the NPV cost of PWLB annuity, EIP and maturity loans with index-linked private placement, using daily-updated DMO and Bank of England rates.")
+                   "Free tool comparing the NPV cost of PWLB annuity, EIP and maturity loans with index-linked private placement, using daily-updated DMO and Bank of England rates.", og_eyebrow="Free tool")
           + body + footer(pg, scripts))
 
 
@@ -868,7 +978,8 @@ def build_404():
 def build_sitemap():
     today = date.today().isoformat()
     urls = [("", today), ("blog", today), ("our-team", today), ("testimonials", today), ("contact", today),
-            ("useful-tools", today), ("pwlb-premium/discount-calculator", today), ("pwlb-v-il", today)]
+            ("useful-tools", today), ("pwlb-premium/discount-calculator", today), ("pwlb-v-il", today),
+            ("case-studies", today)]
     if SITE.get("hra_endpoint"):
         urls.append(("hra-assistant", today))
     urls += [(s["slug"], today) for s in SERVICES]
@@ -892,6 +1003,9 @@ if __name__ == "__main__":
     build_pwlb_repayment()
     build_pwlb_vs_il()
     build_hra_assistant()
+    build_case_studies()
     build_404()
     build_sitemap()
-    print("Built site into", ROOT)
+    from og import render_cards
+    n = render_cards(OG_CARDS)
+    print("Built site into", ROOT, f"({n} share images)")
