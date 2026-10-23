@@ -16,6 +16,10 @@ SITE = {
     # Formspree form ID for the contact form (looks like "xyzabcde"). Leave as is until you have one.
     "formspree_id": "YOUR_FORM_ID",
     "company_number": "12109253",
+    # Web address of the HRA Assistant back end (the Cloudflare Worker), e.g.
+    # "https://haverly-hra-assistant.yourname.workers.dev". While empty, the Tools page
+    # does not link to the assistant and the page shows a "being set up" message.
+    "hra_endpoint": "",
 }
 
 SERVICES = [

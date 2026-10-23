@@ -18,7 +18,7 @@ from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POST
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "9"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "11"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 
@@ -441,8 +441,15 @@ def frameworks_html(pg):
 
 
 def tools_html(pg):
+    hra = ""
+    if SITE.get("hra_endpoint"):
+        hra = f"""<a class="tool" href="{pg.href('hra-assistant')}">
+          <span class="glyph">HRA</span>
+          <div><h3>HRA Assistant</h3><p>Ask questions about the Housing Revenue Account in England and get answers drawn from our HRA knowledge base, with sources.</p></div>
+        </a>
+        """
     return f"""<div class="tools">
-        <a class="tool" href="{pg.href('pwlb-premium/discount-calculator')}">
+        {hra}<a class="tool" href="{pg.href('pwlb-premium/discount-calculator')}">
           <span class="glyph">PWLB</span>
           <div><h3>Early Repayment Calculator</h3><p>Calculate the premium or discount on early repayment of PWLB debt, whether EIP, annuity or maturity.</p></div>
         </a>
@@ -657,6 +664,63 @@ def build_tools():
                    "Free PWLB calculators for local authorities: early repayment premium and discount, and an NPV comparison of PWLB and index-linked borrowing.") + body + footer(pg))
 
 
+HRA_STARTERS = [
+    "How much can council rents rise in 2026/27?",
+    "Can councils keep all their Right to Buy receipts?",
+    "Can we charge our homelessness team to the HRA?",
+    "How should garages be accounted for in the HRA?",
+]
+
+
+def build_hra_assistant():
+    pg = Page("hra-assistant.html")
+    starters = "".join(f'<button type="button">{e(q)}</button>' for q in HRA_STARTERS)
+    body = f"""{header(pg, 'tools')}
+<main id="main">
+{page_hero(pg, [("Home", ""), ("Tools", "useful-tools")], "HRA Assistant", "Ask a question about the Housing Revenue Account and get a clear answer drawn from our HRA knowledge base, with sources.", eyebrow="Tools")}
+<div class="wrap layout">
+  <div id="hra-chat" class="chat" data-endpoint="{e(SITE.get('hra_endpoint', ''))}" data-advisory="{pg.href('advisory-partnership')}" data-contact="{pg.href('contact')}">
+    <div class="chat-head"><b>Ask about the HRA</b><span class="chat-left">2 free questions today</span></div>
+    <p class="chat-note">General guidance on the Housing Revenue Account in England, as at October 2026. Not legal, financial or accounting advice.</p>
+    <div class="chat-log" aria-live="polite">
+      <div class="chat-starters">
+        <p>Try one of these, or type your own question below.</p>
+        {starters}
+      </div>
+    </div>
+    <form>
+      <label class="visually-hidden" for="hra-q">Your question</label>
+      <textarea id="hra-q" rows="1" maxlength="1000" placeholder="Ask a question about the HRA"></textarea>
+      <button class="btn btn-civic" type="submit">Ask</button>
+    </form>
+    <p class="chat-foot">Answers can be wrong. Check the sources cited and take advice before acting. Please don't include personal information in your questions.</p>
+  </div>
+  <aside class="aside">
+    <div class="via">
+      <p class="eyebrow">What it covers</p>
+      <ul>
+        <li><b>Rents and income</b>Rent setting, service charges and the Rent Standard</li>
+        <li><b>The ring-fence</b>What can and can't be charged to the HRA</li>
+        <li><b>Capital and borrowing</b>Right to Buy receipts, the HRA CFR, PWLB and MRP</li>
+        <li><b>Property and regulation</b>Appropriations, disposals, Awaab's Law and consumer standards</li>
+      </ul>
+    </div>
+    <div class="cta-card">
+      <p class="eyebrow">Advisory Partnership</p>
+      <h2>Need advice on your council's position?</h2>
+      <p>Get unlimited access to our housing finance specialists through one annual subscription, with no per-query charges.</p>
+      <a class="btn btn-brass" href="{pg.href('advisory-partnership')}">Find out more</a>
+    </div>
+  </aside>
+</div>
+</main>
+"""
+    write(pg, head(pg, "HRA Assistant | Housing Revenue Account Questions Answered",
+                   "Free AI assistant answering questions about the Housing Revenue Account in England, drawing on Haverly Consulting's HRA knowledge base with sources cited.",
+                   noindex=not SITE.get("hra_endpoint"))
+          + body + footer(pg, f'<script src="{pg.asset("js/hra-chat.js")}" defer></script>\n'))
+
+
 def build_pwlb_repayment():
     pg = Page("pwlb-premium/discount-calculator.html")
     body = f"""{header(pg, 'tools')}
@@ -805,6 +869,8 @@ def build_sitemap():
     today = date.today().isoformat()
     urls = [("", today), ("blog", today), ("our-team", today), ("testimonials", today), ("contact", today),
             ("useful-tools", today), ("pwlb-premium/discount-calculator", today), ("pwlb-v-il", today)]
+    if SITE.get("hra_endpoint"):
+        urls.append(("hra-assistant", today))
     urls += [(s["slug"], today) for s in SERVICES]
     urls += [(p["slug"], p["date"]) for p in POSTS]
     body = "".join(f"<url><loc>{SITE['url']}/{u}</loc><lastmod>{d}</lastmod></url>\n" for u, d in urls)
@@ -825,6 +891,7 @@ if __name__ == "__main__":
     build_tools()
     build_pwlb_repayment()
     build_pwlb_vs_il()
+    build_hra_assistant()
     build_404()
     build_sitemap()
     print("Built site into", ROOT)
