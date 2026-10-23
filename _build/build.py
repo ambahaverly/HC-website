@@ -18,7 +18,7 @@ from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POST
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "8"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "9"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 
@@ -190,10 +190,19 @@ def page_hero(pg, crumbs, h1, lede="", eyebrow="", meta=""):
 """
 
 
-def aside(pg, exclude=None, heading="Book a free 30-minute consultation"):
+def aside(pg, exclude=None, heading="Book a free 30-minute consultation", buy_via=None):
     rel = "".join(f'<a href="{pg.href(s["slug"])}">{e(s["name"])}</a>'
                   for s in SERVICES if s["slug"] != exclude)
+    via = ""
+    if buy_via:
+        items = "".join(f"<li><b>{e(r)}</b>{e(d)}</li>" for r, d in buy_via)
+        via = f"""<div class="via">
+    <p class="eyebrow">Available via</p>
+    <ul>{items}</ul>
+    <a class="link" href="{pg.href('contact')}#frameworks">Buying through a framework</a>
+  </div>"""
     return f"""<aside class="aside">
+  {via}
   <div class="cta-card">
     <p class="eyebrow">Talk to a specialist</p>
     <h2>{e(heading)}</h2>
@@ -463,7 +472,7 @@ def build_services():
     <h2>Frequently asked questions</h2>
     {faq_html(d['faq'])}
   </article>
-  {aside(pg, exclude=slug)}
+  {aside(pg, exclude=slug, buy_via=d.get('buy_via'))}
 </div>
 {contact_band(pg)}
 </main>

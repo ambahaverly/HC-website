@@ -218,6 +218,12 @@ SERVICE_PAGES["finance-business-partnering"] = {
 }
 
 SERVICE_PAGES["financial-appraisals"] = {
+    "buy_via": [
+        ("NHS LPP DPS, Lot 9", "Estates Strategy and Business Case Development Services"),
+        ("NHS LPP DPS, Lot 11", "Property Acquisition, Disposal and Management Advisory Services"),
+        ("YPO 1141", "via Consultancy+, with direct award available"),
+        ("NEPRO³", "via Bloom"),
+    ],
     "title": "Financial Appraisals for Local Authorities",
     "desc": "Expert investment appraisals for UK local authorities. We assess project viability, risk and value for money across housing development, regeneration, commercial property and more.",
     "h1": "Financial Appraisals",
@@ -283,6 +289,11 @@ SERVICE_PAGES["financial-reviews"] = {
 }
 
 SERVICE_PAGES["project-management"] = {
+    "buy_via": [
+        ("NHS LPP DPS, Lot 5", "Construction Project Management Services"),
+        ("YPO 1141", "via Consultancy+, with direct award available"),
+        ("NEPRO³", "via Bloom"),
+    ],
     "title": "Project Management for Local Authorities",
     "desc": "Specialist project management support for UK local authorities. From business case development to programme delivery, we help councils achieve their corporate objectives.",
     "h1": "Project Management",
