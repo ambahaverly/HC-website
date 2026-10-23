@@ -1,0 +1,802 @@
+# -*- coding: utf-8 -*-
+"""Builds the static Haverly Consulting website into the repository root.
+
+Usage:  python3 _build/build.py
+Edit wording in _build/content.py and blog posts in _build/posts/. Then run this
+script and commit the changed .html files. No other dependencies are needed.
+"""
+import html
+import json
+import os
+import re
+import sys
+from datetime import date
+
+sys.path.insert(0, os.path.dirname(__file__))
+from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POSTS,  # noqa: E402
+                     SERVICE_PAGES)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
+ASSET_V = "3"  # bump to bust browser caches after CSS/JS changes
+e = html.escape
+
+
+def fmt_date(iso):
+    d = date.fromisoformat(iso)
+    return f"{d.day} {d.strftime('%B %Y')}"
+
+
+class Page:
+    """Holds a page's output path and computes relative links from it."""
+
+    def __init__(self, path):
+        self.path = path  # e.g. "index.html", "pwlb-premium/discount-calculator.html"
+        depth = path.count("/")
+        self.base = "../" * depth
+
+    def href(self, slug):
+        if slug in ("", "/"):
+            return self.base or "./"
+        if slug.startswith(("http", "mailto:", "tel:", "#")):
+            return slug
+        return self.base + slug
+
+    def asset(self, p):
+        return f"{self.base}assets/{p}?v={ASSET_V}"
+
+    @property
+    def url(self):
+        p = self.path
+        if p == "index.html":
+            return SITE["url"] + "/"
+        return SITE["url"] + "/" + p[:-5]
+
+
+def head(pg, title, desc, extra="", og_type="website", noindex=False):
+    full_title = title if title.endswith(SITE["name"]) else f"{title} | {SITE['name']}"
+    robots = '<meta name="robots" content="noindex">\n' if noindex else ""
+    return f"""<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{e(full_title)}</title>
+<meta name="description" content="{e(desc)}">
+{robots}<link rel="canonical" href="{pg.url}">
+<meta property="og:type" content="{og_type}">
+<meta property="og:title" content="{e(full_title)}">
+<meta property="og:description" content="{e(desc)}">
+<meta property="og:url" content="{pg.url}">
+<meta property="og:site_name" content="{SITE['name']}">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0B2C34">
+<link rel="icon" href="{pg.base}assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{pg.asset('css/site.css')}">
+{extra}</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+"""
+
+
+def header(pg, current=""):
+    def cur(key):
+        return ' aria-current="page"' if key == current else ""
+    svc_links = "".join(
+        f'<a href="{pg.href(s["slug"])}">{e(s["name"])}</a>' for s in SERVICES)
+    mobile_svcs = "".join(
+        f'<a class="sub" href="{pg.href(s["slug"])}">{e(s["name"])}</a>' for s in SERVICES)
+    return f"""<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="{pg.href('')}" aria-label="Haverly Consulting home"><b>HAVERLY</b><span>Consulting Ltd</span></a>
+    <nav class="nav" aria-label="Main">
+      <div class="drop">
+        <button type="button" aria-expanded="false" aria-haspopup="true"{cur('services')}>Services</button>
+        <div class="drop-panel">{svc_links}</div>
+      </div>
+      <a href="{pg.href('')}#results">Transactions</a>
+      <a href="{pg.href('blog')}"{cur('blog')}>Insights</a>
+      <a href="{pg.href('our-team')}"{cur('team')}>Team</a>
+      <a href="{pg.href('useful-tools')}"{cur('tools')}>Tools</a>
+      <a class="btn btn-brass" href="{pg.href('contact')}">Book a consultation</a>
+    </nav>
+    <details class="menu">
+      <summary>Menu</summary>
+      <div class="menu-panel">
+        <p>Services</p>
+        {mobile_svcs}
+        <p>Company</p>
+        <a href="{pg.href('')}#results">Transactions</a>
+        <a href="{pg.href('blog')}">Insights</a>
+        <a href="{pg.href('our-team')}">Team</a>
+        <a href="{pg.href('testimonials')}">Testimonials</a>
+        <a href="{pg.href('useful-tools')}">Tools</a>
+        <a href="{pg.href('contact')}">Contact</a>
+      </div>
+    </details>
+  </div>
+</header>
+"""
+
+
+def contact_band(pg, heading="Talk to a housing finance specialist",
+                 lede="Whether it is an HRA business plan, a TA cost pressure in your MTFP or a developer viability assessment, a 30-minute conversation is usually enough to tell you where the opportunity is."):
+    return f"""<section class="contact" aria-labelledby="cta-h">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Free initial consultation</p>
+      <h2 id="cta-h">{e(heading)}</h2>
+      <p class="lede">{e(lede)}</p>
+      <div class="ctas"><a class="btn btn-brass" href="{pg.href('contact')}">Request a call back</a></div>
+    </div>
+    <dl class="details">
+      <dt>Email</dt><dd><a href="mailto:{SITE['email']}">{SITE['email']}</a></dd>
+      <dt>Phone</dt><dd><a href="tel:{SITE['phone_intl']}">{SITE['phone']}</a></dd>
+      <dt>Office</dt><dd>{', '.join(SITE['address'])}</dd>
+      <dt>Hours</dt><dd>Monday to Friday, 9:00 to 18:00</dd>
+    </dl>
+  </div>
+</section>
+"""
+
+
+def footer(pg, scripts=""):
+    svc = "".join(f'<li><a href="{pg.href(s["slug"])}">{e(s["name"])}</a></li>' for s in SERVICES)
+    li = f'<li><a href="{SITE["linkedin"]}" rel="noopener">LinkedIn</a></li>' if SITE["linkedin"] else ""
+    return f"""<footer class="site-foot">
+  <div class="wrap cols">
+    <div>
+      <a class="brand" href="{pg.href('')}"><b>HAVERLY</b><span>Consulting Ltd</span></a>
+      <p>Independent housing finance advisory for UK local authorities and the affordable housing sector.</p>
+    </div>
+    <div><h2>Services</h2><ul>{svc}</ul></div>
+    <div><h2>Company</h2><ul>
+      <li><a href="{pg.href('our-team')}">Our team</a></li>
+      <li><a href="{pg.href('testimonials')}">Testimonials</a></li>
+      <li><a href="{pg.href('blog')}">Insights</a></li>
+      <li><a href="{pg.href('useful-tools')}">Tools</a></li>
+    </ul></div>
+    <div><h2>Contact</h2><ul>
+      <li><a href="mailto:{SITE['email']}">{SITE['email']}</a></li>
+      <li><a href="tel:{SITE['phone_intl']}">{SITE['phone']}</a></li>
+      <li>{'<br>'.join(SITE['address'])}</li>{li}
+    </ul></div>
+  </div>
+  <div class="wrap legal">
+    <span>© Haverly Consulting Ltd {date.today().year}. Registered in England and Wales.</span>
+    <span>Housing finance advisory for local government</span>
+  </div>
+</footer>
+<script src="{pg.asset('js/site.js')}" defer></script>
+{scripts}</body>
+</html>
+"""
+
+
+def page_hero(pg, crumbs, h1, lede="", eyebrow="", meta=""):
+    trail = " / ".join([f'<a href="{pg.href(href)}">{e(t)}</a>' for t, href in crumbs])
+    eb = f'<p class="eyebrow" style="margin-top:18px">{e(eyebrow)}</p>' if eyebrow else ""
+    ld = f'<p class="lede">{e(lede)}</p>' if lede else ""
+    return f"""<section class="page-hero">
+  <div class="wrap">
+    <p class="crumbs">{trail} / <span>{e(h1 if len(h1) < 40 else 'Article')}</span></p>
+    {eb}<h1>{e(h1)}</h1>
+    {ld}{meta}
+  </div>
+</section>
+"""
+
+
+def aside(pg, exclude=None, heading="Book a free 30-minute consultation"):
+    rel = "".join(f'<a href="{pg.href(s["slug"])}">{e(s["name"])}</a>'
+                  for s in SERVICES if s["slug"] != exclude)
+    return f"""<aside class="aside">
+  <div class="cta-card">
+    <p class="eyebrow">Talk to a specialist</p>
+    <h2>{e(heading)}</h2>
+    <p>Speak to an experienced housing finance consultant about your authority's position. No obligation.</p>
+    <a class="btn btn-brass" href="{pg.href('contact')}">Request a call back</a>
+    <p class="small"><a href="mailto:{SITE['email']}">{SITE['email']}</a><br><a href="tel:{SITE['phone_intl']}">{SITE['phone']}</a></p>
+  </div>
+  <nav class="related" aria-label="Other services">
+    <p class="eyebrow">Other services</p>
+    {rel}
+  </nav>
+</aside>
+"""
+
+
+def write(pg, content):
+    out = os.path.join(ROOT, pg.path)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+def redirect(path, target_slug):
+    pg = Page(path)
+    tgt = pg.href(target_slug)
+    write(pg, f"""<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8">
+<title>Redirecting</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="{SITE['url']}/{target_slug.split('#')[0]}">
+<meta http-equiv="refresh" content="0; url={tgt}">
+</head><body><p>This page has moved. <a href="{tgt}">Continue</a>.</p>
+<script>location.replace({json.dumps(tgt)});</script></body></html>
+""")
+
+
+# ------------------------------------------------------------------ components
+def services_grid(pg):
+    return "".join(f"""<a class="svc" href="{pg.href(s['slug'])}">
+          <h3>{e(s['name'])}</h3>
+          <p>{e(s['blurb'])}</p>
+          <span class="tags">{e(s['tags'])}</span>
+        </a>""" for s in SERVICES)
+
+
+def quote_fig(t):
+    return f"""<figure class="quote">
+          <blockquote>{e(t['quote'])}</blockquote>
+          <figcaption><b>{e(t['role'])}</b>{e(t['org'])}</figcaption>
+        </figure>"""
+
+
+def post_cards(pg, posts):
+    return "".join(f"""<a class="post" href="{pg.href(p['slug'])}">
+          <time datetime="{p['date']}">{fmt_date(p['date'])}</time>
+          <h3>{e(p.get('short', p['title']))}</h3>
+          <p>{e(p['desc'])}</p>
+        </a>""" for p in posts)
+
+
+def faq_html(items):
+    return '<div class="faq">' + "".join(
+        f"<details><summary>{e(q)}</summary><div><p>{e(a)}</p></div></details>" for q, a in items) + "</div>"
+
+
+def faq_schema(items):
+    return {"@context": "https://schema.org", "@type": "FAQPage",
+            "mainEntity": [{"@type": "Question", "name": q,
+                            "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in items]}
+
+
+def ld(obj):
+    return f'<script type="application/ld+json">{json.dumps(obj, ensure_ascii=False)}</script>\n'
+
+
+# ------------------------------------------------------------------ pages
+def build_home():
+    pg = Page("index.html")
+    org = {"@context": "https://schema.org", "@type": "ProfessionalService", "name": "Haverly Consulting Ltd",
+           "url": SITE["url"] + "/", "email": SITE["email"], "telephone": SITE["phone_intl"],
+           "description": "Independent housing finance advisory for UK local authorities and the affordable housing sector.",
+           "address": {"@type": "PostalAddress", "streetAddress": SITE["address"][0], "addressLocality": "London",
+                       "postalCode": SITE["address"][2], "addressCountry": "GB"},
+           "areaServed": "GB", "founder": {"@type": "Person", "name": "Nick Haverly", "jobTitle": "Director"}}
+    practice = "".join(
+        f'<li><a href="{pg.href(slug)}"><b>{e(t)}</b><span>{e(d)}</span></a></li>' for t, d, slug in PRACTICE)
+    clients = "".join(f"<li>{e(c)}</li>" for c in CLIENTS)
+    body = f"""{header(pg)}
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">Housing finance advisory for local government</p>
+        <h1>Complex housing challenges. <em>Clear financial solutions.</em></h1>
+        <p class="lede">Independent strategic and financial advice for local authorities and the affordable housing sector. We structure funding, test viability and stabilise budgets so councils can deliver more homes with less risk.</p>
+        <div class="ctas">
+          <a class="btn btn-brass" href="{pg.href('contact')}">Book a free 30-minute consultation</a>
+          <a class="btn btn-ghost" href="#results">See recent transactions</a>
+        </div>
+      </div>
+      <div class="practice">
+        <p class="eyebrow">Areas of practice</p>
+        <ul>{practice}</ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="cred">
+    <div class="wrap">
+      <span><b>CCAB</b> qualified leadership</span>
+      <span>Member, Cabinet Office <b>One Public Estate</b> Pool of Experts</span>
+      <span><b>70+ years</b> combined public sector experience</span>
+    </div>
+  </div>
+
+  <section class="block" id="results">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Recent transactions</p>
+          <h2>Turning temporary accommodation risk into owned supply</h2>
+        </div>
+        <p class="intro">Two funding structures for Westminster City Council's temporary accommodation portfolio, each drawing on a different pool of long-term, index-linked capital.</p>
+      </div>
+      <div class="deals">
+        <article class="tomb">
+          <p class="eyebrow">Institutional funding · Temporary accommodation</p>
+          <p class="tomb-client">Westminster City Council</p>
+          <p class="tomb-figure">368<small>homes acquired that were previously leased as temporary accommodation</small></p>
+          <dl>
+            <dt>Term</dt><dd>42 years, index-linked</dd>
+            <dt>Retrofit</dt><dd>£33.5m embedded in the structure</dd>
+            <dt>Outcome</dt><dd>Volatile nightly costs replaced by structured payments; assets unencumbered at lease expiry</dd>
+          </dl>
+          <div class="foot"><span>Led by Nick Haverly</span><a class="link" href="{pg.href('section-151-officers-is-your-temporary-accommodation-strategy-financially-sustainable')}">Read the case</a></div>
+        </article>
+        <article class="tomb">
+          <p class="eyebrow">Sale and leaseback · Temporary accommodation</p>
+          <p class="tomb-client">City of Westminster Pension Fund</p>
+          <p class="tomb-figure">£50m<small>capital released from existing temporary accommodation stock</small></p>
+          <dl>
+            <dt>Term</dt><dd>40 years, index-linked</dd>
+            <dt>Portfolio</dt><dd>128 properties via a council-owned LLP</dd>
+            <dt>Outcome</dt><dd>Receipt reinvested in new TA supply; Council retains full use under the leaseback</dd>
+          </dl>
+          <div class="foot"><span>Led by Nick Haverly</span><a class="link" href="{pg.href(POSTS[0]['slug'])}">Read the case</a></div>
+        </article>
+      </div>
+      <figure class="pull">
+        <p>Two different pools of long-term capital, one goal: turning an unmanaged financial risk into planned, asset-backed housing supply.</p>
+        <cite><b>Nick Haverly</b>Director</cite>
+      </figure>
+    </div>
+  </section>
+
+  <div class="clients" aria-label="Selected clients">
+    <div class="wrap">
+      <p class="eyebrow">Selected clients</p>
+      <ul>{clients}</ul>
+    </div>
+  </div>
+
+  <section class="block" id="services">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Services</p>
+          <h2>Specialist support across the housing finance cycle</h2>
+        </div>
+        <p class="intro">From an annual advisory subscription to a single independent appraisal, every engagement is led by practitioners who have run council finance functions themselves.</p>
+      </div>
+      <div class="services">{services_grid(pg)}</div>
+    </div>
+  </section>
+
+  <section class="block alt" id="testimonials">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Client feedback</p>
+          <h2>Trusted by the people who sign off the numbers</h2>
+        </div>
+        <p class="intro"><a class="link" href="{pg.href('testimonials')}">All testimonials</a></p>
+      </div>
+      <div class="quotes">{''.join(quote_fig(t) for t in TESTIMONIALS[:3])}</div>
+    </div>
+  </section>
+
+  <section class="block" id="insights">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Insights</p>
+          <h2>Commentary from the front line of housing finance</h2>
+        </div>
+        <p class="intro"><a class="link" href="{pg.href('blog')}">All articles</a></p>
+      </div>
+      <div class="posts">{post_cards(pg, POSTS[:3])}</div>
+    </div>
+  </section>
+
+  <section class="block alt" id="tools">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <p class="eyebrow">Free tools</p>
+          <h2>Borrowing calculators for treasury teams</h2>
+        </div>
+      </div>
+      {tools_html(pg)}
+    </div>
+  </section>
+
+  {contact_band(pg)}
+</main>
+"""
+    write(pg, head(pg, "Housing Finance Consultancy for Local Authorities | Haverly Consulting",
+                   "Specialist housing finance consultants supporting UK local authorities with HRA, temporary accommodation, financial appraisals, business partnering and advisory services.",
+                   extra=ld(org)) + body + footer(pg))
+
+
+def tools_html(pg):
+    return f"""<div class="tools">
+        <a class="tool" href="{pg.href('pwlb-premium/discount-calculator')}">
+          <span class="glyph">PWLB</span>
+          <div><h3>Early Repayment Calculator</h3><p>Calculate the premium or discount on early repayment of PWLB debt, whether EIP, annuity or maturity.</p></div>
+        </a>
+        <a class="tool" href="{pg.href('pwlb-v-il')}">
+          <span class="glyph">NPV</span>
+          <div><h3>PWLB vs Index-Linked Comparison</h3><p>Compare the net present value of PWLB annuity, EIP and maturity borrowing with index-linked private placement, using live reference rates.</p></div>
+        </a>
+      </div>"""
+
+
+def build_services():
+    for s in SERVICES:
+        slug = s["slug"]
+        d = SERVICE_PAGES[slug]
+        pg = Page(f"{slug}.html")
+        crumbs = [("Home", ""), ("Services", "#services")]
+        crumbs = [("Home", ""), ("Services", "#services")]
+        hero = page_hero(pg, [("Home", ""), ("Services", "")], d["h1"], d["lede"], eyebrow="Services")
+        # the "Services" crumb should land on the home page services grid
+        hero = hero.replace(f'href="{pg.href("")}">Services', f'href="{pg.href("")}#services">Services')
+        body = f"""{header(pg, 'services')}
+<main id="main">
+{hero}
+<div class="wrap layout">
+  <article class="prose">
+    {d['body']}
+    <h2>Frequently asked questions</h2>
+    {faq_html(d['faq'])}
+  </article>
+  {aside(pg, exclude=slug)}
+</div>
+{contact_band(pg)}
+</main>
+"""
+        write(pg, head(pg, d["title"], d["desc"], extra=ld(faq_schema(d["faq"]))) + body + footer(pg))
+
+
+def build_testimonials():
+    pg = Page("testimonials.html")
+    body = f"""{header(pg)}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Testimonials", "What councils and partners say about working with us.", eyebrow="Client feedback")}
+<section class="block">
+  <div class="wrap">
+    <div class="quotes two">{''.join(quote_fig(t) for t in TESTIMONIALS)}</div>
+  </div>
+</section>
+<div class="clients" aria-label="Selected clients">
+  <div class="wrap">
+    <p class="eyebrow">Selected clients</p>
+    <ul>{''.join(f'<li>{e(c)}</li>' for c in CLIENTS)}</ul>
+  </div>
+</div>
+{contact_band(pg)}
+</main>
+"""
+    write(pg, head(pg, "Client Testimonials",
+                   "What UK local authorities say about working with Haverly Consulting. Trusted by councils including Westminster, Ealing, Guildford and the Isle of Wight.") + body + footer(pg))
+
+
+def build_team():
+    pg = Page("our-team.html")
+    people = ""
+    for p in TEAM:
+        bio = "".join(f"<p>{e(x)}</p>" for x in p["bio"])
+        people += f"""<article class="person" id="{p['id']}">
+        <div class="portrait" aria-hidden="true">{p['initials']}<img src="{pg.base}assets/img/team/{p['id']}.jpg" alt="" loading="lazy" onerror="this.remove()"></div>
+        <div>
+          <h2>{e(p['name'])}</h2>
+          <p class="role">{e(p['role'])}</p>
+          <div class="bio">{bio}</div>
+        </div>
+      </article>"""
+    body = f"""{header(pg, 'team')}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Our team", "Housing finance specialists with over 70 years of combined public sector experience. We care deeply about public services and work to protect front line services and maximise value for money.", eyebrow="People")}
+<section class="block">
+  <div class="wrap">
+    <div class="team">{people}</div>
+  </div>
+</section>
+{contact_band(pg)}
+</main>
+"""
+    write(pg, head(pg, "Our Team | Housing Finance Experts",
+                   "Meet the Haverly Consulting team: housing finance specialists with over 70 years of combined public sector experience across UK local authorities.") + body + footer(pg))
+    for p in TEAM:
+        redirect(f"{p['id']}.html", f"our-team#{p['id']}")
+
+
+def build_contact():
+    pg = Page("contact.html")
+    action = f"https://formspree.io/f/{SITE['formspree_id']}"
+    body = f"""{header(pg)}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Contact us", "Leave your details and one of our housing finance specialists will call you back to arrange a free 30-minute consultation.", eyebrow="Free initial consultation")}
+<div class="wrap contact-grid">
+  <div>
+    <h2 style="font-size:1.6rem;font-weight:750;margin-bottom:24px">Request a call back</h2>
+    <form class="form" id="contact-form" action="{action}" method="POST">
+      <div class="field"><label for="name">Name</label><input id="name" name="name" type="text" autocomplete="name" required></div>
+      <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" required></div>
+      <input type="hidden" name="_subject" value="Website enquiry: call back request">
+      <label class="hp" aria-hidden="true">Leave blank<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+      <div><button class="btn btn-civic" type="submit">Request a call back</button></div>
+      <p class="form-status" id="form-status" role="status" hidden></p>
+    </form>
+  </div>
+  <div>
+    <h2 style="font-size:1.6rem;font-weight:750;margin-bottom:24px">Contact details</h2>
+    <dl class="info-list">
+      <dt>Email</dt><dd><a href="mailto:{SITE['email']}">{SITE['email']}</a></dd>
+      <dt>Phone</dt><dd><a href="tel:{SITE['phone_intl']}">{SITE['phone']}</a></dd>
+      <dt>Office</dt><dd>Haverly Consulting Ltd<br>{'<br>'.join(SITE['address'])}</dd>
+      <dt>Hours</dt><dd>Monday to Friday, 9:00 to 18:00<br>Closed weekends</dd>
+    </dl>
+  </div>
+</div>
+</main>
+"""
+    write(pg, head(pg, "Contact Haverly Consulting | Free Initial Consultation",
+                   "Get in touch with Haverly Consulting to arrange a free consultation with one of our housing finance specialists. We work with local authorities across the UK.") + body + footer(pg))
+    redirect("contact-us.html", "contact")
+
+
+def read_time(text):
+    words = len(re.sub(r"<[^>]+>", " ", text).split())
+    return max(1, round(words / 220))
+
+
+def tidy_post(raw):
+    # standalone bold paragraphs become section headings
+    raw = re.sub(r"<p><strong>([^<]{3,90})</strong></p>", r"<h2>\1</h2>", raw)
+    # an opening h3 becomes the stand-first
+    raw = re.sub(r"^\s*<h3>(.*?)</h3>", r'<p class="intro-line">\1</p>', raw, count=1, flags=re.S)
+    # absolute links to the old site become relative
+    raw = raw.replace('href="/contact"', 'href="contact"')
+    return raw
+
+
+def build_posts():
+    for i, p in enumerate(POSTS):
+        pg = Page(f"{p['slug']}.html")
+        with open(os.path.join(POST_DIR, p["slug"] + ".html"), encoding="utf-8") as f:
+            raw = tidy_post(f.read())
+        raw = raw.replace('href="contact"', f'href="{pg.href("contact")}"')
+        mins = read_time(raw)
+        meta = f'<p class="post-meta"><span>By Nick Haverly</span><span><time datetime="{p["date"]}">{fmt_date(p["date"])}</time></span><span>{mins} min read</span></p>'
+        newer = POSTS[i - 1] if i > 0 else None
+        older = POSTS[i + 1] if i + 1 < len(POSTS) else None
+        nav = '<nav class="post-nav" aria-label="More articles">'
+        nav += f'<a href="{pg.href(older["slug"])}"><span>Previous article</span><b>{e(older["title"])}</b></a>' if older else "<span></span>"
+        nav += f'<a href="{pg.href(newer["slug"])}"><span>Next article</span><b>{e(newer["title"])}</b></a>' if newer else "<span></span>"
+        nav += "</nav>"
+        schema = {"@context": "https://schema.org", "@type": "BlogPosting", "headline": p["title"],
+                  "datePublished": p["date"], "description": p["desc"],
+                  "author": {"@type": "Person", "name": "Nick Haverly"},
+                  "publisher": {"@type": "Organization", "name": "Haverly Consulting Ltd"},
+                  "mainEntityOfPage": pg.url}
+        body = f"""{header(pg, 'blog')}
+<main id="main">
+{page_hero(pg, [("Home", ""), ("Insights", "blog")], p['title'], eyebrow=p['tag'], meta=meta)}
+<div class="wrap layout">
+  <article class="prose">
+    {raw}
+    {nav}
+  </article>
+  {aside(pg, heading="Discuss this with Nick")}
+</div>
+</main>
+"""
+        write(pg, head(pg, p["title"], p["desc"], extra=ld(schema), og_type="article") + body + footer(pg))
+
+
+def build_blog():
+    pg = Page("blog.html")
+    items = "".join(f"""<li><a href="{pg.href(p['slug'])}">
+        <time datetime="{p['date']}">{fmt_date(p['date'])}</time>
+        <div><p class="eyebrow" style="color:var(--civic);margin-bottom:6px">{e(p['tag'])}</p><h2>{e(p['title'])}</h2><p>{e(p['desc'])}</p></div>
+      </a></li>""" for p in POSTS)
+    body = f"""{header(pg, 'blog')}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Insights", "Commentary on housing finance, the HRA, temporary accommodation, local authority housing companies and public sector financial management.", eyebrow="Blog")}
+<section class="block" style="padding-top:56px">
+  <div class="wrap">
+    <ul class="archive">{items}</ul>
+  </div>
+</section>
+{contact_band(pg)}
+</main>
+"""
+    write(pg, head(pg, "Housing Finance Insights and News",
+                   "Expert commentary on housing finance, HRA, local authority housing companies, MRP, temporary accommodation and public sector financial management from Haverly Consulting.") + body + footer(pg))
+
+
+def build_tools():
+    pg = Page("useful-tools.html")
+    body = f"""{header(pg, 'tools')}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Useful tools", "Free calculators for local authority treasury and finance teams.", eyebrow="Tools")}
+<section class="block">
+  <div class="wrap">{tools_html(pg)}</div>
+</section>
+{contact_band(pg)}
+</main>
+"""
+    write(pg, head(pg, "Useful Tools for Local Authority Finance Teams",
+                   "Free PWLB calculators for local authorities: early repayment premium and discount, and an NPV comparison of PWLB and index-linked borrowing.") + body + footer(pg))
+
+
+def build_pwlb_repayment():
+    pg = Page("pwlb-premium/discount-calculator.html")
+    body = f"""{header(pg, 'tools')}
+<main id="main">
+{page_hero(pg, [("Home", ""), ("Tools", "useful-tools")], "PWLB early repayment calculator", "Estimate the premium payable or discount receivable on early repayment of PWLB debt, for EIP, annuity or maturity loans.", eyebrow="Tools")}
+<div class="wrap calc">
+  <form class="panel" id="calcForm" novalidate>
+    <fieldset>
+      <legend>Loan details</legend>
+      <div class="field"><label for="loanType">Loan type</label>
+        <select id="loanType"><option value="EIP" selected>EIP (Equal Instalment of Principal)</option><option value="Maturity">Maturity</option><option value="Annuity">Annuity</option></select></div>
+      <div class="grid-2">
+        <div class="field"><label for="loanRepaidDate">Loan to be repaid on</label><input id="loanRepaidDate" type="date" value="2015-10-02"></div>
+        <div class="field"><label for="finalPaymentDate">Date of final payment</label><input id="finalPaymentDate" type="date" value="2045-09-10"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="prevInterestDate">Previous interest payment</label><input id="prevInterestDate" type="date" value="2015-09-10"></div>
+        <div class="field"><label for="amount">Amount to be repaid (£)</label><input id="amount" type="number" inputmode="decimal" min="0" step="0.01" value="5000000"></div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Rates</legend>
+      <div class="grid-2">
+        <div class="field"><label for="discountRate">Discount rate (%)</label><input id="discountRate" type="number" inputmode="decimal" step="0.01" value="2.12"></div>
+        <div class="field"><label for="loanRate">Loan rate (%)</label><input id="loanRate" type="number" inputmode="decimal" step="0.01" value="3.27"></div>
+      </div>
+    </fieldset>
+    <button class="btn btn-civic" type="submit">Calculate premium / discount</button>
+    <p class="err-msg" id="errorMsg" role="alert" hidden></p>
+  </form>
+  <div class="panel" aria-live="polite">
+    <div class="result-hero">
+      <p class="eyebrow" id="resultLabel">Premium payable</p>
+      <p class="value" id="resultValue">£0.00</p>
+    </div>
+    <h3>All methods</h3>
+    <dl class="kv">
+      <div id="rowMaturity" style="display:contents"><dt>Maturity</dt><dd id="valMaturity"></dd></div>
+      <div id="rowEIP" style="display:contents"><dt>EIP</dt><dd id="valEIP"></dd></div>
+      <div id="rowAnnuity" style="display:contents"><dt>Annuity</dt><dd id="valAnnuity"></dd></div>
+    </dl>
+    <h3>Workings</h3>
+    <dl class="kv">
+      <dt>Semi-annual discount rate (id)</dt><dd id="bId"></dd>
+      <dt>Semi-annual loan rate (il)</dt><dd id="bIl"></dd>
+      <dt>Days since previous interest payment (D)</dt><dd id="bD"></dd>
+      <dt>Semi-annual periods remaining (N)</dt><dd id="bN"></dd>
+      <dt>Annuity factor at discount rate (A1)</dt><dd id="bA1"></dd>
+      <dt>Present value factor (PV1)</dt><dd id="bPV1"></dd>
+      <dt>Annuity factor at loan rate (A2)</dt><dd id="bA2"></dd>
+    </dl>
+    <p class="note">For guidance only. Always verify against official PWLB documentation before making a repayment decision.</p>
+  </div>
+</div>
+{contact_band(pg, "Reviewing your debt portfolio?", "A debt and MRP review often finds savings that more than cover its cost. We can model restructuring options and early repayment scenarios for your authority.")}
+</main>
+"""
+    write(pg, head(pg, "PWLB Early Repayment Premium and Discount Calculator",
+                   "Free calculator for the premium or discount on early repayment of PWLB loans, covering EIP, annuity and maturity loans, with full workings.")
+          + body + footer(pg, f'<script src="{pg.asset("js/pwlb-repayment.js")}" defer></script>\n'))
+
+
+def build_pwlb_vs_il():
+    pg = Page("pwlb-v-il.html")
+    body = f"""{header(pg, 'tools')}
+<main id="main">
+{page_hero(pg, [("Home", ""), ("Tools", "useful-tools")], "PWLB vs index-linked borrowing", "Compare annuity, EIP, maturity and index-linked financing on a net present value basis, using daily-updated DMO and Bank of England reference rates.", eyebrow="Tools")}
+<div class="wrap calc">
+  <form class="panel" id="calcForm" novalidate>
+    <fieldset>
+      <legend>Loan details</legend>
+      <div class="grid-2">
+        <div class="field"><label for="principal">Loan principal (£)</label><input id="principal" type="number" inputmode="decimal" min="0" step="1000" value="50000000"></div>
+        <div class="field"><label for="term">Loan term (years)</label><input id="term" type="number" inputmode="numeric" min="1" max="50" step="1" value="40"></div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>PWLB reference rate</legend>
+      <div class="field"><label for="pwlbRateDisplay">Certainty Rate for this term</label><input id="pwlbRateDisplay" type="text" readonly value="Loading reference rates…">
+        <span class="hint">Each repayment type has its own published DMO curve. Shown net of the 20bps Certainty Rate discount.</span></div>
+    </fieldset>
+    <fieldset>
+      <legend>Index-linked private placement</legend>
+      <div class="field"><label for="giltRateDisplay">Index-linked gilt real yield for this term</label><input id="giltRateDisplay" type="text" readonly value="…"></div>
+      <div class="grid-2">
+        <div class="field"><label for="margin">Margin over gilt yield (bps)</label><input id="margin" type="number" inputmode="numeric" step="1" value="100"></div>
+        <div class="field"><label for="rpi">Long-term RPI assumption (%)</label><input id="rpi" type="number" inputmode="decimal" step="0.1" value="3.0"></div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>NPV assumptions</legend>
+      <div class="field"><label for="discRate">Discount rate for NPV comparison (%)</label><input id="discRate" type="number" inputmode="decimal" step="0.01">
+        <span class="hint">Defaults to the PWLB annuity rate above. Override it to test a different discount rate.</span></div>
+    </fieldset>
+    <button class="btn btn-civic" type="submit">Calculate comparison</button>
+  </form>
+  <div class="panel" aria-live="polite">
+    <h2>NPV cost of borrowing</h2>
+    <div class="npv-grid" id="resultGrid" style="margin-top:20px"><p class="note">Loading reference rates…</p></div>
+    <div class="callout" id="ctaCallout" hidden>
+      <p class="headline">This scenario shows a potential <b id="ctaSaving"></b> NPV saving over your cheapest PWLB option.</p>
+      <p>Index-linked financing won't suit every capital programme, but when the numbers line up like this it's worth a conversation. We can help you work through whether it's right for your authority.</p>
+      <div><a class="btn btn-brass" id="ctaLink" href="mailto:{SITE['email']}">Email Haverly Consulting</a></div>
+    </div>
+    <h3>Annual payments</h3>
+    <div class="chart-box" id="chartBox"><canvas id="paymentChart" aria-label="Annual payment profile for each borrowing option" role="img"></canvas></div>
+  </div>
+</div>
+<section class="wrap" style="padding-bottom:64px">
+  <div class="panel">
+    <h2>Reference rates</h2>
+    <p class="note" style="margin-top:8px">As at <span id="ratesAsOf">…</span>. <span id="ratesSource"></span> PWLB rates are shown net of the 20bps Certainty Rate discount, interpolated where needed.</p>
+    <div class="table-wrap"><table class="rates" id="ratesTable"></table></div>
+    <p class="note">This tool provides an illustrative, high-level comparison only and does not constitute financial, accounting, legal or investment advice. Minimum Revenue Provision (asset life, annuity method) and IFRS 9 amortised cost workings are not shown in this summary view; contact Haverly Consulting for the full detailed model. Rates should be checked against live DMO and market data before use in any financing decision.</p>
+  </div>
+</section>
+{contact_band(pg, "Exploring index-linked finance?", "We led a 42-year institutional funding structure and a 40-year pension fund sale-and-leaseback for Westminster City Council. We can model the options for your capital programme.")}
+</main>
+"""
+    scripts = (f'<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js" defer></script>\n'
+               f'<script src="{pg.asset("js/pwlb-vs-il.js")}" defer></script>\n')
+    write(pg, head(pg, "PWLB vs Index-Linked Borrowing Cost Comparison",
+                   "Free tool comparing the NPV cost of PWLB annuity, EIP and maturity loans with index-linked private placement, using daily-updated DMO and Bank of England rates.")
+          + body + footer(pg, scripts))
+
+
+def build_404():
+    pg = Page("404.html")
+    # 404 is served from any depth, so use absolute links here
+    pg.base = "/"
+    body = f"""{header(pg)}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Page not found", "The page you were looking for has moved or no longer exists.", eyebrow="404")}
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head"><div><p class="eyebrow">Where next</p><h2>Our services</h2></div></div>
+    <div class="services">{services_grid(pg)}</div>
+  </div>
+</section>
+</main>
+"""
+    write(pg, head(pg, "Page not found", "Page not found.", noindex=True) + body + footer(pg))
+
+
+def build_sitemap():
+    today = date.today().isoformat()
+    urls = [("", today), ("blog", today), ("our-team", today), ("testimonials", today), ("contact", today),
+            ("useful-tools", today), ("pwlb-premium/discount-calculator", today), ("pwlb-v-il", today)]
+    urls += [(s["slug"], today) for s in SERVICES]
+    urls += [(p["slug"], p["date"]) for p in POSTS]
+    body = "".join(f"<url><loc>{SITE['url']}/{u}</loc><lastmod>{d}</lastmod></url>\n" for u, d in urls)
+    with open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8") as f:
+        f.write(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{body}</urlset>\n')
+    with open(os.path.join(ROOT, "robots.txt"), "w", encoding="utf-8") as f:
+        f.write(f"User-agent: *\nAllow: /\n\nSitemap: {SITE['url']}/sitemap.xml\n")
+
+
+if __name__ == "__main__":
+    build_home()
+    build_services()
+    build_testimonials()
+    build_team()
+    build_contact()
+    build_posts()
+    build_blog()
+    build_tools()
+    build_pwlb_repayment()
+    build_pwlb_vs_il()
+    build_404()
+    build_sitemap()
+    print("Built site into", ROOT)
