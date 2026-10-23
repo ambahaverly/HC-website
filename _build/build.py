@@ -18,7 +18,7 @@ from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POST
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "12"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "16"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 
@@ -87,9 +87,8 @@ def head(pg, title, desc, extra="", og_type="website", noindex=False,
 {og_img}<meta name="twitter:card" content="{'summary_large_image' if img else 'summary'}">
 <meta name="theme-color" content="#0B2C34">
 <link rel="icon" href="{pg.base}assets/img/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preload" href="{pg.base}assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{pg.base}assets/fonts/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{pg.asset('css/site.css')}">
 {extra}</head>
 <body>
@@ -183,7 +182,7 @@ def footer(pg, scripts=""):
   </div>
   <div class="wrap legal">
     <span>© Haverly Consulting Ltd {date.today().year}. Registered in England and Wales, company number {SITE['company_number']}. Registered office: {', '.join(SITE['address'][:2])} {SITE['address'][2]}.</span>
-    <span>Housing finance advisory for local government</span>
+    <span><a href="{pg.href('privacy')}">Privacy notice</a></span>
   </div>
 </footer>
 <script src="{pg.asset('js/site.js')}" defer></script>
@@ -277,6 +276,23 @@ def post_cards(pg, posts):
           <h3>{e(p.get('short', p['title']))}</h3>
           <p>{e(p['desc'])}</p>
         </a>""" for p in posts)
+
+
+HRA_PROMPT_SERVICES = {"advisory-partnership", "financial-reviews"}
+HRA_PROMPT_TAGS = {"HRA and rents", "Right to Buy", "Housing companies", "Social housing", "Temporary accommodation"}
+
+
+def hra_prompt(pg):
+    if not SITE.get("hra_endpoint"):
+        return ""
+    return f"""<aside class="hra-prompt" aria-label="HRA Assistant">
+      <span class="glyph">HRA</span>
+      <div>
+        <p class="hra-prompt-title">Have a quick HRA question?</p>
+        <p>Try our free HRA Assistant for answers on rents, the ring-fence, Right to Buy receipts, borrowing and more, drawn from our knowledge base with sources.</p>
+        <a class="link" href="{pg.href('hra-assistant')}">Ask the HRA Assistant</a>
+      </div>
+    </aside>"""
 
 
 def faq_html(items):
@@ -456,6 +472,7 @@ def frameworks_html(pg):
         <p class="eyebrow">How to buy</p>
         <h2 id="buy-h">Commission us without a full tender</h2>
         <p>We are an approved supplier on three public sector procurement routes. <a class="link" href="{pg.href('contact')}#frameworks">How it works</a></p>
+        <p style="margin-top:10px"><a class="link" href="{pg.base}assets/docs/haverly-consulting-capability-statement.pdf">Download our capability statement (PDF)</a></p>
       </div>
       <ul>{items}</ul>
     </div>
@@ -498,6 +515,7 @@ def build_services():
 <div class="wrap layout">
   <article class="prose">
     {d['body']}
+    {hra_prompt(pg) if slug in HRA_PROMPT_SERVICES else ''}
     <h2>Frequently asked questions</h2>
     {faq_html(d['faq'])}
   </article>
@@ -578,6 +596,7 @@ def build_contact():
       <div class="field"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" required></div>
       <input type="hidden" name="_subject" value="Website enquiry: call back request">
       <label class="hp" aria-hidden="true">Leave blank<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+      <p class="hint" style="font-size:.86rem;color:var(--muted)">We'll only use your details to respond to your enquiry. See our <a href="{pg.href('privacy')}" style="color:var(--civic)">privacy notice</a>.</p>
       <div><button class="btn btn-civic" type="submit">Request a call back</button></div>
       <p class="form-status" id="form-status" role="status" hidden></p>
     </form>
@@ -593,6 +612,7 @@ def build_contact():
     <h2 id="frameworks" style="font-size:1.6rem;font-weight:750;margin:48px 0 12px;scroll-margin-top:100px">Buying through a framework</h2>
     <p style="color:var(--muted);margin-bottom:20px">Public sector buyers can commission us through any of these routes, by direct award or mini-competition depending on the framework rules, without running a full tender of their own.</p>
     <dl class="info-list">{''.join(f"<dt>{e(f['name'])}</dt><dd>{e(f['detail'])} <a href=\"{f['url']}\" rel=\"noopener\" target=\"_blank\">Framework details</a></dd>" for f in FRAMEWORKS)}</dl>
+    <p style="margin-top:20px"><a class="btn btn-outline" href="{pg.base}assets/docs/haverly-consulting-capability-statement.pdf">Download capability statement (PDF)</a></p>
   </div>
 </div>
 </main>
@@ -641,7 +661,9 @@ def build_posts():
 {page_hero(pg, [("Home", ""), ("Insights", "blog")], p['title'], eyebrow=p['tag'], meta=meta)}
 <div class="wrap layout">
   <article class="prose">
+    {f'<div class="update-note"><p><strong>Update, October 2026.</strong> {e(p["update"])}</p></div>' if p.get('update') else ''}
     {raw}
+    {hra_prompt(pg) if p['tag'] in HRA_PROMPT_TAGS else ''}
     {nav}
   </article>
   {aside(pg, heading="Discuss this with Nick")}
@@ -782,6 +804,80 @@ def build_case_studies():
                    og_byline="Westminster · Guildford · Waverley · Gosport") + body + footer(pg))
 
 
+PRIVACY_UPDATED = "2026-10-23"
+
+
+def build_privacy():
+    pg = Page("privacy.html")
+    addr = ", ".join(SITE["address"])
+    body = f"""{header(pg)}
+<main id="main">
+{page_hero(pg, [("Home", "")], "Privacy notice", "How Haverly Consulting collects and uses personal information through this website.", eyebrow="Legal")}
+<div class="wrap layout">
+  <article class="prose">
+    <p><em>Last updated {fmt_date(PRIVACY_UPDATED)}</em></p>
+
+    <h2>Who we are</h2>
+    <p>This website is run by Haverly Consulting Ltd, a company registered in England and Wales (company number {SITE['company_number']}), with its registered office at {addr}. We are the data controller for personal information collected through this website.</p>
+    <p>If you have any questions about this notice or how we use your information, email <a href="mailto:{SITE['email']}">{SITE['email']}</a> or write to us at the address above.</p>
+
+    <h2>Information we collect</h2>
+    <h3>When you contact us</h3>
+    <p>If you use our contact form, we collect your name, email address and phone number. If you email or call us, we collect whatever details you choose to share.</p>
+    <p>We use this information only to respond to your enquiry and, if we go on to work together, to manage that relationship. Our lawful basis is our legitimate interest in responding to people who contact us, or taking steps at your request before entering into a contract.</p>
+    <p>The contact form is processed by <a href="https://formspree.io">Formspree</a>, a form-handling service that forwards your details to us by email. Formspree may process this information outside the UK, under its own privacy terms and appropriate safeguards.</p>
+
+    <h3 id="hra-assistant">When you use the HRA Assistant</h3>
+    <p>Questions you type into the HRA Assistant are sent, together with the rest of that conversation, to Anthropic, the company that provides the Claude AI model, so that it can generate an answer. The service runs on Cloudflare, which passes your question to Anthropic and returns the answer.</p>
+    <ul>
+      <li>We do not keep a record of the questions you ask or the answers you receive.</li>
+      <li>Anthropic states that it automatically deletes inputs and outputs from its systems within 30 days, other than in limited circumstances such as enforcing its usage policies or meeting legal requirements.</li>
+      <li>To prevent misuse, we count the number of questions asked from each network (IP) address per day. These counts are stored by Cloudflare and deleted automatically after two days.</li>
+      <li>Your browser remembers how many free questions you have used today. This is stored only on your own device and is not sent to us.</li>
+    </ul>
+    <p>Please don't include personal information, or confidential information about your organisation, in your questions. Our lawful basis for operating the assistant is our legitimate interest in providing a useful public information tool. Anthropic and Cloudflare may process this information outside the UK, under their own terms and appropriate safeguards.</p>
+
+    <h3>When you browse the site</h3>
+    <p>This website is hosted by GitHub Pages. Like most web hosts, GitHub may record visitors' IP addresses in its server logs for security and operational purposes. The PWLB comparison tool loads daily reference rates from GitHub, which may also see your IP address.</p>
+    <p>We do not use cookies, advertising trackers or analytics on this website. The fonts and code the site needs are served from the site itself.</p>
+
+    <h2>How long we keep your information</h2>
+    <p>We keep enquiry details for as long as we need them to respond and follow up. If we go on to work together, we keep relevant records for the duration of that relationship and for up to six years afterwards, to meet legal and accounting requirements. If we don't work together, we delete enquiry details within two years.</p>
+
+    <h2>Sharing your information</h2>
+    <p>We do not sell your information or share it for marketing. We share it only with the service providers named in this notice, who process it on our behalf, or where the law requires us to.</p>
+
+    <h2>Your rights</h2>
+    <p>Under UK data protection law you have the right to:</p>
+    <ul>
+      <li>ask for a copy of the personal information we hold about you</li>
+      <li>ask us to correct information that is wrong or incomplete</li>
+      <li>ask us to delete your information</li>
+      <li>object to, or ask us to restrict, how we use your information</li>
+    </ul>
+    <p>To use any of these rights, email <a href="mailto:{SITE['email']}">{SITE['email']}</a>. We will respond within one month.</p>
+    <p>If you are unhappy with how we have handled your information, you can complain to the Information Commissioner's Office at <a href="https://ico.org.uk/make-a-complaint/">ico.org.uk</a>. We would welcome the chance to put things right first, so please contact us before going to the ICO.</p>
+
+    <h2>Changes to this notice</h2>
+    <p>We may update this notice from time to time. The date at the top shows when it was last changed.</p>
+  </article>
+  <aside class="aside">
+    <div class="via">
+      <p class="eyebrow">Data controller</p>
+      <ul>
+        <li><b>Haverly Consulting Ltd</b>Company number {SITE['company_number']}</li>
+        <li><b>Registered office</b>{addr}</li>
+        <li><b>Contact</b><a href="mailto:{SITE['email']}" style="color:var(--civic)">{SITE['email']}</a></li>
+      </ul>
+    </div>
+  </aside>
+</div>
+</main>
+"""
+    write(pg, head(pg, "Privacy Notice", "How Haverly Consulting collects and uses personal information through its website, contact form and HRA Assistant.",
+                   og_eyebrow="Legal") + body + footer(pg))
+
+
 def build_hra_assistant():
     pg = Page("hra-assistant.html")
     starters = "".join(f'<button type="button">{e(q)}</button>' for q in HRA_STARTERS)
@@ -803,7 +899,7 @@ def build_hra_assistant():
       <textarea id="hra-q" rows="1" maxlength="1000" placeholder="Ask a question about the HRA"></textarea>
       <button class="btn btn-civic" type="submit">Ask</button>
     </form>
-    <p class="chat-foot">Answers can be wrong. Check the sources cited and take advice before acting. Please don't include personal information in your questions.</p>
+    <p class="chat-foot">Answers can be wrong. Check the sources cited and take advice before acting. Please don't include personal information in your questions. <a href="{pg.href('privacy')}#hra-assistant">How your questions are handled</a>.</p>
   </div>
   <aside class="aside">
     <div class="via">
@@ -950,7 +1046,7 @@ def build_pwlb_vs_il():
 {contact_band(pg, "Exploring index-linked finance?", "We led a 42-year institutional funding structure and a 40-year pension fund sale-and-leaseback for Westminster City Council. We can model the options for your capital programme.")}
 </main>
 """
-    scripts = (f'<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js" defer></script>\n'
+    scripts = (f'<script src="{pg.base}assets/js/vendor/chart-4.5.0.umd.min.js" defer></script>\n'
                f'<script src="{pg.asset("js/pwlb-vs-il.js")}" defer></script>\n')
     write(pg, head(pg, "PWLB vs Index-Linked Borrowing Cost Comparison",
                    "Free tool comparing the NPV cost of PWLB annuity, EIP and maturity loans with index-linked private placement, using daily-updated DMO and Bank of England rates.", og_eyebrow="Free tool")
@@ -979,7 +1075,7 @@ def build_sitemap():
     today = date.today().isoformat()
     urls = [("", today), ("blog", today), ("our-team", today), ("testimonials", today), ("contact", today),
             ("useful-tools", today), ("pwlb-premium/discount-calculator", today), ("pwlb-v-il", today),
-            ("case-studies", today)]
+            ("case-studies", today), ("privacy", today)]
     if SITE.get("hra_endpoint"):
         urls.append(("hra-assistant", today))
     urls += [(s["slug"], today) for s in SERVICES]
@@ -1004,8 +1100,12 @@ if __name__ == "__main__":
     build_pwlb_vs_il()
     build_hra_assistant()
     build_case_studies()
+    build_privacy()
     build_404()
     build_sitemap()
     from og import render_cards
     n = render_cards(OG_CARDS)
-    print("Built site into", ROOT, f"({n} share images)")
+    import content as _content
+    from capability import build_capability
+    pdf = build_capability(_content)
+    print("Built site into", ROOT, f"({n} share images, capability statement {'updated' if pdf else 'unchanged'})")
