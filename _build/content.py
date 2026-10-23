@@ -39,7 +39,7 @@ SERVICES = [
      "blurb": "Structure and discipline for funded capital programmes, from Outline Business Case through to grant drawdown.",
      "tags": "Homes England · MHCLG · PMO"},
     {"slug": "training", "name": "Training and Development",
-     "blurb": "Practitioner-led seminars, in-house sessions and webinars that count towards CPD.",
+     "blurb": "Practitioner-led seminars, in-house sessions and webinars, designed around your team's needs.",
      "tags": "HRA · MRP · Capital financing"},
 ]
 
@@ -357,8 +357,6 @@ SERVICE_PAGES["training"] = {
 <p>If you have a topic or team need that isn't listed, get in touch. We regularly develop bespoke training in response to client requests.</p>
 """,
     "faq": [
-        ("Do sessions count towards CPD?",
-         "Yes. Our sessions are suitable for CPD and we provide certificates of attendance. Delegates record their own CPD, and we supply all the supporting documentation."),
         ("How do we arrange in-house training?",
          "Tell us your team's size, current knowledge level and the topics you are most interested in. We will design a session for you and provide a quote. Most in-house sessions can be arranged within four to six weeks."),
         ("Are webinars available after the live event?",
