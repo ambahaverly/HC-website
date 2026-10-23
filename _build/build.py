@@ -665,7 +665,7 @@ def build_tools():
 
 
 HRA_STARTERS = [
-    "How much can council rents rise in 2026/27?",
+    "How much can council rents rise in 2027/28?",
     "Can councils keep all their Right to Buy receipts?",
     "Can we charge our homelessness team to the HRA?",
     "How should garages be accounted for in the HRA?",
