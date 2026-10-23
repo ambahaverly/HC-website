@@ -18,7 +18,7 @@ from content import (SITE, SERVICES, PRACTICE, CLIENTS, TESTIMONIALS, TEAM, POST
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POST_DIR = os.path.join(os.path.dirname(__file__), "posts")
-ASSET_V = "3"  # bump to bust browser caches after CSS/JS changes
+ASSET_V = "4"  # bump to bust browser caches after CSS/JS changes
 e = html.escape
 
 

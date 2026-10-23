@@ -1,5 +1,6 @@
 // PWLB early repayment premium / discount calculator
-// Method ported unchanged from the original Haverly Consulting tool.
+// Method ported from the original Haverly Consulting tool. The maturity method now uses
+// actual days of accrued interest (D), consistent with EIP and annuity (previously fixed at 20).
 (function () {
   function $(id) { return document.getElementById(id); }
   function daysBetween(d1, d2) { return Math.round((d2 - d1) / 86400000); }
@@ -36,7 +37,7 @@
     var A2 = il / (1 - Math.pow(1 + il, -N));
 
     // Maturity
-    var premMaturity = amount * ((1 + (id * D) / 182.5) * ((il / A1) + PV1) - (1 + (il * 20) / 182.5));
+    var premMaturity = amount * ((1 + (id * D) / 182.5) * ((il / A1) + PV1) - (1 + (il * D) / 182.5));
     // EIP
     var premEIP = amount * ((1 + (id * D) / 182.5) * ((1 / (N * A1)) * (1 - il / id) + il / id) - (1 + (il * D) / 182.5));
     // Annuity
