@@ -777,7 +777,7 @@ def build_case_studies():
 {contact_band(pg, "Facing a similar challenge?", "Whether it is a regeneration programme, a temporary accommodation pressure or a site that won't stack up, a 30-minute conversation is usually enough to tell you where the opportunity is.")}
 </main>
 """
-    write(pg, head(pg, "Case Studies", "Case studies from Haverly Consulting: Westminster temporary accommodation funding, Guildford's £467m Weyside Urban Village, Waverley development appraisals and a Gosport One Public Estate commission.",
+    write(pg, head(pg, "Case Studies", "Case studies from Haverly Consulting: Westminster temporary accommodation funding, Guildford's £467m Weyside Urban Village, Waverley development appraisals and a One Public Estate commission for a Gosport housing site.",
                    og_eyebrow="Case studies", og_title="Funding, regeneration and viability for councils",
                    og_byline="Westminster · Guildford · Waverley · Gosport") + body + footer(pg))
 
