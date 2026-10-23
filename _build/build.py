@@ -336,7 +336,7 @@ def build_home():
           <p class="tomb-figure">£50m<small>capital released from existing temporary accommodation stock</small></p>
           <dl>
             <dt>Term</dt><dd>40 years, index-linked</dd>
-            <dt>Portfolio</dt><dd>128 properties via a council-owned LLP</dd>
+            <dt>Portfolio</dt><dd>124 properties via a council-owned LLP</dd>
             <dt>Outcome</dt><dd>Receipt reinvested in new TA supply; Council retains full use under the leaseback</dd>
           </dl>
           <div class="foot"><span>Led by Nick Haverly</span><a class="link" href="{pg.href(POSTS[0]['slug'])}">Read the case</a></div>

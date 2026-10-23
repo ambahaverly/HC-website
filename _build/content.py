@@ -93,7 +93,7 @@ POSTS = [
      "title": "Westminster City Council Pension Fund: £50m Sale-and-Leaseback Frees Up Capital for New Temporary Accommodation",
      "short": "Westminster Pension Fund: £50m sale-and-leaseback frees up capital for new TA",
      "date": "2026-07-29", "tag": "Transactions",
-     "desc": "How a £50m, 40-year index-linked sale-and-leaseback with the City of Westminster Pension Fund released capital from 128 temporary accommodation properties to fund new supply."},
+     "desc": "How a £50m, 40-year index-linked sale-and-leaseback with the City of Westminster Pension Fund released capital from 124 temporary accommodation properties to fund new supply."},
     {"slug": "london-social-housing-waiting-list-crisis-2026",
      "title": "London's Social Housing Waiting List Grows 30% in a Decade",
      "date": "2026-05-22", "tag": "Social housing",
