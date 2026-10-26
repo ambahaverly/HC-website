@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
 Sitemap: https://www.haverlyconsulting.co.uk/sitemap.xml
